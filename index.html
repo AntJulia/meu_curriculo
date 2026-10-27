@@ -108,12 +108,13 @@ h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(2.3rem
 .piece { font-size: clamp(22px, 5.4vw, 46px); line-height: 1; color: #18202b; text-shadow: 0 1px 0 rgba(255,255,255,.4), 0 3px 6px rgba(0,0,0,.25); pointer-events: none; transition: transform .25s, opacity .3s; }
 .piece.enter { animation: drop .5s cubic-bezier(.3,1.5,.5,1) both; }
 @keyframes drop { from { transform: translateY(-40%) scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
-.sq.has:hover .piece { transform: translateY(-4px) scale(1.08); }
+@media (hover: hover) { .sq.has:hover .piece { transform: translateY(-4px) scale(1.08); } }
 .sq.got .piece { opacity: 0; transform: scale(.3) rotate(-25deg); }
 .sq.me, .sq.legal { cursor: pointer; }
 .sq.legal::before { content: ""; position: absolute; width: 28%; aspect-ratio: 1; border-radius: 50%; background: rgba(0, 0, 0, .22); transition: transform .15s; }
 .sq.legal.has::before { width: 90%; background: transparent; border: 5px solid rgba(0, 0, 0, .22); }
-.sq.legal:hover::before { transform: scale(1.15); }
+@media (hover: hover) { .sq.legal:hover::before { transform: scale(1.15); } }
+.sq { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .sq:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; z-index: 2; }
 
 /* selo de acerto/erro no canto da casa, como no chess.com */
@@ -227,6 +228,47 @@ h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(2.3rem
 .stamp { display: inline-block; margin-left: 6px; font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--gold); border: 1px solid var(--gold); border-radius: 3px; padding: 0 5px; vertical-align: 2px; }
 footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 footer a { color: var(--accent); }
+
+/* atalhos entre o tabuleiro e o capítulo, só no celular (onde o cartão fica abaixo do tabuleiro) */
+.linkbtn { display: none; margin-top: 6px; padding: 0; border: 0; background: none; color: var(--accent); font: 600 13px var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.linkbtn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* ---------- celular: topo compacto para tabuleiro e status caberem juntos na tela ---------- */
+@media (max-width: 560px) {
+  body { padding-block: 20px 40px; }
+  .wrap { gap: 28px; }
+  header.top { gap: 12px; }
+  .id { gap: 4px; }
+  h1 { font-size: 2rem; }
+  .role { font-size: .92rem; }
+  .btn { padding: 7px 12px; font-size: 13px; }
+  .game { gap: 20px; }
+  .board-col { gap: 10px; }
+  .levels { gap: 6px; }
+  .levels li { padding: 7px 8px; border-radius: 6px; }
+  .levels .lv { font-size: 10px; letter-spacing: .04em; }
+  .levels .nm { font-size: 12px; }
+  .levels .bar { margin-top: 4px; height: 3px; }
+  .levels li.now { transform: none; }
+  .board-frame { padding: 6px; border-radius: 10px; }
+  .scene { padding: 16px; }
+  .scene-card { gap: 10px; }
+  .scene h2 { font-size: 1.3rem; }
+  .scene p { font-size: .93rem; }
+  .avatar { width: 36px; height: 36px; font-size: 17px; }
+  .status { padding: 10px 12px; min-height: 0; gap: 10px; }
+  .status .ico { width: 26px; height: 26px; font-size: 13px; }
+  .status .msg b { font-size: 15px; }
+  .status .msg span { font-size: 13px; }
+  .controls .btn { flex: 1 1 auto; }
+  .stat { width: 100%; margin-left: 0; text-align: center; }
+  .card { padding: 16px; }
+  .detail h2 { font-size: 1.35rem; }
+  .detail .big { font-size: 40px; }
+  .sheet li { grid-template-columns: 3ch 6ch minmax(0,1fr); gap: 8px; }
+  .cv-head h2 { font-size: 1.6rem; }
+  .linkbtn { display: block; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -437,7 +479,8 @@ footer a { color: var(--accent); }
     b.type = "button";
     b.className = "sq " + ((x + y) % 2 === 0 ? "l" : "d");
     b.addEventListener("click", () => clickSquare(s));
-    b.addEventListener("pointerenter", () => showTip(s));
+    // Prévia só com mouse: no toque ela ficaria presa sobre o tabuleiro.
+    b.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") showTip(s); });
     b.addEventListener("pointerleave", () => { tip.hidden = true; });
     boardEl.appendChild(b);
     squares[s] = b;
@@ -615,7 +658,8 @@ footer a { color: var(--accent); }
       <div class="eyebrow">Nível ${state.level + 1} · capítulo ${state.got[state.level].length} de ${lvl().items.length}</div>
       <h2>${item.title}</h2>
       <div class="meta">${item.org} · ${item.when}</div><p>${item.text}</p>
-      <div class="tags">${item.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div>`);
+      <div class="tags">${item.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div>
+      <button class="linkbtn" type="button" data-go="board">Voltar ao tabuleiro ↑</button>`);
   }
   function finalCard(eyebrow) {
     setDetail(`<div class="eyebrow">${eyebrow}</div>
@@ -741,7 +785,7 @@ footer a { color: var(--accent); }
       setTimeout(() => { burst(s, 28); state.busy = false; finishLevel(); }, 750);
       return;
     }
-    setStatus("good", "Correto!", `${item.title}. Agora encontre o próximo lance.`);
+    setStatus("good", "Correto!", `${item.title}. Agora encontre o próximo lance.<button class="linkbtn" type="button" data-go="detail">Ler o capítulo ↓</button>`);
     if (document.activeElement && document.activeElement.classList.contains("sq")) squares[state.pos].focus({ preventScroll: true });
   }
 
@@ -812,6 +856,13 @@ footer a { color: var(--accent); }
     render();
     showScene(INTRO, { label: "Introdução" }, () => startLevel(0));
   }
+
+  document.addEventListener("click", e => {
+    const go = e.target.closest("[data-go]");
+    if (!go) return;
+    const el = go.dataset.go === "detail" ? detailEl : document.querySelector(".levels");
+    el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  });
 
   document.getElementById("hint").addEventListener("click", hint);
   document.getElementById("reset").addEventListener("click", boot);
