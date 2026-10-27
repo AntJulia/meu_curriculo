@@ -47,7 +47,11 @@
 }
 
 * { box-sizing: border-box; }
+/* Sem isto, elementos com display próprio (a fala, os selos) ignoram o atributo hidden fora do artifact. */
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
 body {
+  margin: 0;
   background: var(--bg); color: var(--ink);
   font-family: var(--font-body); font-size: 16px; line-height: 1.55;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -88,7 +92,7 @@ h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(2.3rem
 
 .board-col { display: grid; gap: 12px; min-width: 0; }
 /* tabuleiro e fala ocupam a mesma célula: se a fala for maior, a moldura cresce em vez de cortar o botão */
-.board-frame { position: relative; display: grid; padding: clamp(8px, 1.6vw, 14px); background: var(--frame); border-radius: 12px; box-shadow: var(--shadow); }
+.board-frame { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); padding: clamp(8px, 1.6vw, 14px); background: var(--frame); border-radius: 12px; box-shadow: var(--shadow); }
 .board, .scene { grid-area: 1 / 1; }
 .board { position: relative; align-self: start; width: 100%; aspect-ratio: 1; max-width: 100%; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); user-select: none; border-radius: 4px; }
 .sq { position: relative; border: 0; padding: 0; margin: 0; font: inherit; cursor: default; display: grid; place-items: center; transition: box-shadow .25s; }
@@ -497,6 +501,13 @@ footer a { color: var(--accent); }
   knight.innerHTML = `<span aria-hidden="true">♞${VS}</span>`;
   boardEl.appendChild(knight);
   boardEl.appendChild(tip);
+
+  // Navegadores sem aspect-ratio (iOS < 15) deixariam o tabuleiro sem altura: fixa a altura igual à largura.
+  if (!(window.CSS && CSS.supports && CSS.supports("aspect-ratio", "1"))) {
+    const square = () => { boardEl.style.height = boardEl.offsetWidth + "px"; };
+    square();
+    window.addEventListener("resize", square);
+  }
 
   // Seta em L, como as setas de cavalo do chess.com: perna longa primeiro, depois a curta.
   function drawArrow(from, to) {
